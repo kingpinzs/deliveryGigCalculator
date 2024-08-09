@@ -1,10 +1,10 @@
 const CACHE_NAME = 'delivery-calculator-cache-v1';
 const urlsToCache = [
-    '/deliveryGigCalculator/',                
-    '/deliveryGigCalculator/index.html',      
-    '/deliveryGigCalculator/manifest.json',  
-    '/deliveryGigCalculator/icon.png',  
-    '/deliveryGigCalculator/service-worker.js'
+    './',
+    './index.html',
+    './manifest.json',
+    './icon.png',
+    './service-worker.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -35,7 +35,15 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request)
             .then((response) => {
-                return response || fetch(event.request);
+                // If the request is in the cache, return it
+                if (response) {
+                    return response;
+                }
+                // If the request is not cached, fetch it from the network
+                return fetch(event.request).catch(() => {
+                    // Optionally, you can serve a fallback page for offline users
+                    return caches.match('./index.html');
+                });
             })
     );
 });
