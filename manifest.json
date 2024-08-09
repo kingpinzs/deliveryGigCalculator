@@ -16,12 +16,14 @@
         {
             "src": "./mobile_screenshot.png",
             "sizes": "373x776",
-            "type": "image/png"
+            "type": "image/png",
+            "form_factor": "narrow"
         },
         {
             "src": "./desktop_screenshot.png",
             "sizes": "1280x770",
-            "type": "image/png"
+            "type": "image/png",
+            "form_factor": "wide"
         }
     ]
 }
