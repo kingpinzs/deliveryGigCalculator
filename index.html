@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Profit Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 15px 0 5px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Delivery Profit Calculator</h1>
+        <label for="distance">One-way Delivery Distance (miles):</label>
+        <input type="number" id="distance" placeholder="Enter one-way distance in miles">
+
+        <label for="returnDistance">Return Distance (miles):</label>
+        <input type="number" id="returnDistance" placeholder="Enter return distance in miles">
+
+        <label for="pay">Delivery Pay ($):</label>
+        <input type="number" id="pay" placeholder="Enter pay in dollars">
+
+        <label for="numDeliveries">Number of Deliveries:</label>
+        <input type="number" id="numDeliveries" placeholder="Enter number of deliveries">
+
+        <button onclick="calculateProfit()">Calculate</button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function calculateProfit() {
+            const distance = parseFloat(document.getElementById('distance').value);
+            const returnDistance = parseFloat(document.getElementById('returnDistance').value);
+            const pay = parseFloat(document.getElementById('pay').value);
+            const numDeliveries = parseInt(document.getElementById('numDeliveries').value);
+            const fuelCostPerGallon = 4; // Assuming $4 per gallon
+            const mileage = 20; // Assuming 20 miles per gallon
+            const loadingTime = 10; // 10 minutes to load
+            const unloadingTime = 8; // 10 minutes to unload per delivery
+            const averageSpeed = 25; // 25 miles per hour
+
+            if (isNaN(distance) || isNaN(returnDistance) || isNaN(pay) || isNaN(numDeliveries)) {
+                document.getElementById('result').innerText = 'Please enter valid numbers for all fields.';
+                return;
+            }
+
+            const totalDistance = distance + returnDistance;
+            const fuelCost = (totalDistance / mileage) * fuelCostPerGallon;
+            const profit = pay - fuelCost;
+
+            const drivingTime = (totalDistance / averageSpeed) * 60; // Convert hours to minutes
+            const totalUnloadTime = unloadingTime * numDeliveries;
+            const totalTime = drivingTime + loadingTime + totalUnloadTime;
+
+            if (profit > 10) {
+                document.getElementById('result').innerText = `Profit: $${profit.toFixed(2)}. This delivery is worth accepting!\nTotal Time: ${totalTime.toFixed(2)} minutes.`;
+            } else {
+                document.getElementById('result').innerText = `Profit: $${profit.toFixed(2)}. This delivery is not worth accepting.\nTotal Time: ${totalTime.toFixed(2)} minutes.`;
+            }
+        }
+    </script>
+</body>
+</html>
