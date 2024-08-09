@@ -1,8 +1,8 @@
 {
     "name": "Delivery Profit Calculator",
     "short_name": "DeliveryCalc",
-    "id": "./",
-    "scope": "./",
+    "id": "/deliveryGigCalculator/",
+    "scope": "/deliveryGigCalculator/",
     "description": "Calculate the profitability of delivery gigs quickly and easily.",
     "start_url": "./index.html",
     "display": "standalone",
@@ -28,5 +28,14 @@
             "type": "image/png",
             "form_factor": "wide"
         }
-    ]
+    ],
+    "orientation": "portrait-primary",
+    "scope": "/deliveryGigCalculator/",
+    "serviceworker": {
+        "src": "/deliveryGigCalculator/service-worker.js",
+        "scope": "/deliveryGigCalculator/",
+        "update_via_cache": "all"
+    },
+    "lang": "en-US",
+    "dir": "ltr"
 }
