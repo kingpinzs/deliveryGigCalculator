@@ -1,6 +1,9 @@
 {
     "name": "Delivery Profit Calculator",
     "short_name": "DeliveryCalc",
+    "id": "./",
+    "scope": "./",
+    "description": "Calculate the profitability of delivery gigs quickly and easily.",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#ffffff",
