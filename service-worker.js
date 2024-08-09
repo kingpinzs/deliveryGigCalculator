@@ -1,10 +1,10 @@
 const CACHE_NAME = 'delivery-calculator-cache-v1';
 const urlsToCache = [
-    '/',
-    '/index.html',
-    '/manifest.json', // Make sure the manifest is cached too
-    '/icon.png',   // Add any icons or images you might be using
-    '/service-worker.js'
+    '/deliveryGigCalculator/',                
+    '/deliveryGigCalculator/index.html',      
+    '/deliveryGigCalculator/manifest.json',  
+    '/deliveryGigCalculator/icon.png',  
+    '/deliveryGigCalculator/service-worker.js'
 ];
 
 self.addEventListener('install', (event) => {
