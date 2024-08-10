@@ -9,9 +9,21 @@
         * {
             box-sizing: border-box;
         }
+        :root {
+            --bg-color: #fff;
+            --text-color: #000;
+            --input-bg-color: #fff;
+            --result-bg-color: #f9f9f9;
+            --tooltip-bg-color: #555;
+            --tooltip-text-color: #fff;
+            --tab-bg-color: #f0f0f0;
+            --tab-active-bg-color: #d0eaff;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 50px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
         }
         .container {
             max-width: 400px;
@@ -32,17 +44,100 @@
             width: 100%;
             padding: 10px;
             margin-top: 5px;
+            background-color: var(--input-bg-color);
+            color: var(--text-color);
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
         .result {
             margin-top: 20px;
             padding: 15px;
-            background-color: #f9f9f9;
+            background-color: var(--result-bg-color);
             border: 1px solid #ddd;
             border-radius: 5px;
             text-align: center;
         }
+        .tabs {
+            display: flex;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            background-color: var(--tab-bg-color);
+            border: 1px solid #ccc;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            transition: background-color 0.3s;
+        }
+        .tab.active {
+            background-color: var(--tab-active-bg-color);
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 0 0 10px 10px;
+            background-color: var(--tab-active-bg-color);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress {
+            height: 100%;
+            background-color: #4caf50;
+            width: 0;
+        }
+        .dark-mode-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .tooltip {
+            position: relative;
+            cursor: pointer;
+        }
+        .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--tooltip-bg-color);
+            color: var(--tooltip-text-color);
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; 
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        @media (max-width: 480px) {
+            .container {
+                margin: 20px;
+                padding: 15px;
+            }
+            .tabs {
+                flex-direction: column;
+            }
+        }
     </style>
-    <script>
+     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/deliveryGigCalculator/service-worker.js')
@@ -56,56 +151,325 @@
     </script>
 </head>
 <body>
+    <div class="dark-mode-toggle">
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    </div>
     <div class="container">
         <h1>Delivery Profit Calculator</h1>
-        <label for="distance">One-way Delivery Distance (miles):</label>
-        <input type="number" id="distance" placeholder="Enter one-way distance in miles">
 
-        <label for="returnDistance">Return Distance (miles):</label>
-        <input type="number" id="returnDistance" placeholder="Enter return distance in miles">
+        <div class="tabs">
+            <div class="tab active" id="calculatorTab" onclick="showTab('calculator')">Calculator</div>
+            <div class="tab" id="configTab" onclick="showTab('config')">Advanced Config</div>
+            <div class="tab" id="expensesTab" onclick="showTab('expenses')">Expenses</div>
+            <div class="tab" id="overallProfitTab" onclick="showTab('overallProfit')">Overall Profit</div>
+        </div>
 
-        <label for="pay">Delivery Pay ($):</label>
-        <input type="number" id="pay" placeholder="Enter pay in dollars">
+        <div id="calculator" class="tab-content active">
+            <label for="distance">One-way Delivery Distance (miles): <span class="tooltip">?
+                <span class="tooltip-text">Enter the one-way distance in miles.</span>
+            </span></label>
+            <input type="number" id="distance" placeholder="Enter one-way distance in miles">
 
-        <label for="numDeliveries">Number of Deliveries:</label>
-        <input type="number" id="numDeliveries" placeholder="Enter number of deliveries">
+            <label for="returnDistance">Return Distance (miles): <span class="tooltip">?
+                <span class="tooltip-text">Enter the return distance in miles.</span>
+            </span></label>
+            <input type="number" id="returnDistance" placeholder="Enter return distance in miles">
 
-        <button onclick="calculateProfit()">Calculate</button>
+            <label for="pay">Delivery Pay ($): <span class="tooltip">?
+                <span class="tooltip-text">Enter the pay amount in dollars.</span>
+            </span></label>
+            <input type="number" id="pay" placeholder="Enter pay in dollars">
 
-        <div id="result" class="result"></div>
+            <label for="numDeliveries">Number of Deliveries: <span class="tooltip">?
+                <span class="tooltip-text">Enter the number of deliveries.</span>
+            </span></label>
+            <input type="number" id="numDeliveries" placeholder="Enter number of deliveries">
+
+            <label for="shoppingRequired">Shopping Required:<input type="checkbox" id="shoppingRequired" style="width: fit-content;"></label>
+
+            <label for="shoppingTime">Shopping Time (minutes): <span class="tooltip">?
+                <span class="tooltip-text">Enter the time spent shopping in minutes.</span>
+            </span></label>
+            <input type="number" id="shoppingTime" placeholder="Enter shopping time in minutes" disabled>
+
+            <h3>Immediate Expenses</h3>
+            <label for="coffeeSnack">Coffee/Snack ($): <span class="tooltip">?
+                <span class="tooltip-text">Enter the amount spent on coffee or snacks this session.</span>
+            </span></label>
+            <input type="number" id="coffeeSnack" placeholder="Enter coffee/snack expenses">
+
+            <label for="gasBought">Gas Bought ($): <span class="tooltip">?
+                <span class="tooltip-text">Enter the amount spent on gas this session.</span>
+            </span></label>
+            <input type="number" id="gasBought" placeholder="Enter gas expenses">
+
+            <button onclick="calculateProfit()">Calculate</button>
+            <button onclick="saveJob()">Save Job</button>
+
+            <div class="progress-bar">
+                <div id="progress" class="progress"></div>
+            </div>
+
+            <button onclick="clearAll()">Clear All</button>
+
+            <div id="result" class="result"></div>
+        </div>
+
+        <div id="config" class="tab-content">
+            <h3>Advanced Configuration</h3>
+
+            <label for="fuelCostPerGallon">Fuel Cost per Gallon ($): <span class="tooltip">?
+                <span class="tooltip-text">Default: $4.00</span>
+            </span></label>
+            <input type="number" id="fuelCostPerGallon" placeholder="Enter fuel cost per gallon">
+
+            <label for="mileage">Vehicle Mileage (miles per gallon): <span class="tooltip">?
+                <span class="tooltip-text">Default: 20 MPG</span>
+            </span></label>
+            <input type="number" id="mileage" placeholder="Enter vehicle mileage">
+
+            <label for="loadingTime">Loading Time (minutes): <span class="tooltip">?
+                <span class="tooltip-text">Default: 10 minutes</span>
+            </span></label>
+            <input type="number" id="loadingTime" placeholder="Enter loading time in minutes">
+
+            <label for="unloadingTime">Unloading Time (minutes): <span class="tooltip">?
+                <span class="tooltip-text">Default: 8 minutes</span>
+            </span></label>
+            <input type="number" id="unloadingTime" placeholder="Enter unloading time in minutes">
+
+            <label for="averageSpeed">Average Speed (miles per hour): <span class="tooltip">?
+                <span class="tooltip-text">Default: 25 MPH</span>
+            </span></label>
+            <input type="number" id="averageSpeed" placeholder="Enter average speed in mph">
+
+            <button onclick="resetDefaults()">Reset to Default</button>
+        </div>
+
+        <div id="expenses" class="tab-content">
+            <h3>Expenses Tracking</h3>
+
+            <label for="tolls">Tolls ($): <span class="tooltip">?
+                <span class="tooltip-text">Enter the cost of tolls for this trip.</span>
+            </span></label>
+            <input type="number" id="tolls" placeholder="Enter toll expenses">
+
+            <label for="parking">Parking ($): <span class="tooltip">?
+                <span class="tooltip-text">Enter the cost of parking for this trip.</span>
+            </span></label>
+            <input type="number" id="parking" placeholder="Enter parking expenses">
+
+            <label for="otherExpenses">Other Expenses ($): <span class="tooltip">?
+                <span class="tooltip-text">Enter any other expenses for this trip.</span>
+            </span></label>
+            <input type="number" id="otherExpenses" placeholder="Enter other expenses">
+
+            <label for="taxRate">Estimated Tax Rate (%): <span class="tooltip">?
+                <span class="tooltip-text">Enter your estimated tax rate.</span>
+            </span></label>
+            <input type="number" id="taxRate" placeholder="Enter tax rate as a percentage">
+
+            <label for="maintenanceCost">Maintenance Cost ($/mile): <span class="tooltip">?
+                <span class="tooltip-text">Enter estimated maintenance cost per mile.</span>
+            </span></label>
+            <input type="number" id="maintenanceCost" placeholder="Enter maintenance cost per mile">
+
+            <label for="mileageDriven">Miles Driven: <span class="tooltip">?
+                <span class="tooltip-text">Enter the total miles driven for this trip.</span>
+            </span></label>
+            <input type="number" id="mileageDriven" placeholder="Enter total miles driven">
+
+            <button onclick="calculateOverallProfit()">Calculate Overall Profit</button>
+
+            <div id="expensesResult" class="result"></div>
+        </div>
+
+        <div id="overallProfit" class="tab-content">
+            <h3>Overall Profit Calculation</h3>
+            <div id="jobList" class="result"></div>
+            <div id="overallProfitResult" class="result"></div>
+        </div>
     </div>
 
     <script>
+        let jobs = [];
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tabElement => tabElement.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        function loadDefaults() {
+            const savedValues = JSON.parse(localStorage.getItem('advancedSettings'));
+            const values = savedValues || {
+                fuelCostPerGallon: 4,
+                mileage: 20,
+                loadingTime: 10,
+                unloadingTime: 8,
+                averageSpeed: 25,
+                taxRate: 15,
+                maintenanceCost: 0.05
+            };
+
+            document.getElementById('fuelCostPerGallon').value = values.fuelCostPerGallon;
+            document.getElementById('mileage').value = values.mileage;
+            document.getElementById('loadingTime').value = values.loadingTime;
+            document.getElementById('unloadingTime').value = values.unloadingTime;
+            document.getElementById('averageSpeed').value = values.averageSpeed;
+            document.getElementById('taxRate').value = values.taxRate;
+            document.getElementById('maintenanceCost').value = values.maintenanceCost;
+
+            // Load jobs if saved
+            const savedJobs = JSON.parse(localStorage.getItem('jobs'));
+            if (savedJobs) {
+                jobs = savedJobs;
+                updateJobList();
+                calculateOverallProfit();
+            }
+        }
+
+        function resetDefaults() {
+            localStorage.removeItem('advancedSettings');
+            loadDefaults();
+        }
+
+        function saveAdvancedSettings() {
+            const advancedSettings = {
+                fuelCostPerGallon: parseFloat(document.getElementById('fuelCostPerGallon').value),
+                mileage: parseFloat(document.getElementById('mileage').value),
+                loadingTime: parseFloat(document.getElementById('loadingTime').value),
+                unloadingTime: parseFloat(document.getElementById('unloadingTime').value),
+                averageSpeed: parseFloat(document.getElementById('averageSpeed').value),
+                taxRate: parseFloat(document.getElementById('taxRate').value),
+                maintenanceCost: parseFloat(document.getElementById('maintenanceCost').value)
+            };
+            localStorage.setItem('advancedSettings', JSON.stringify(advancedSettings));
+        }
+
         function calculateProfit() {
             const distance = parseFloat(document.getElementById('distance').value);
             const returnDistance = parseFloat(document.getElementById('returnDistance').value);
             const pay = parseFloat(document.getElementById('pay').value);
             const numDeliveries = parseInt(document.getElementById('numDeliveries').value);
-            const fuelCostPerGallon = 4; // Assuming $4 per gallon
-            const mileage = 20; // Assuming 20 miles per gallon
-            const loadingTime = 10; // 10 minutes to load
-            const unloadingTime = 8; // 10 minutes to unload per delivery
-            const averageSpeed = 25; // 25 miles per hour
+            const shoppingRequired = document.getElementById('shoppingRequired').checked;
+            const shoppingTime = shoppingRequired ? parseFloat(document.getElementById('shoppingTime').value) : 0;
+            const coffeeSnack = parseFloat(document.getElementById('coffeeSnack').value) || 0;
+            const gasBought = parseFloat(document.getElementById('gasBought').value) || 0;
 
-            if (isNaN(distance) || isNaN(returnDistance) || isNaN(pay) || isNaN(numDeliveries)) {
-                document.getElementById('result').innerText = 'Please enter valid numbers for all fields.';
+            if (isNaN(distance) || distance < 0 || 
+                isNaN(returnDistance) || returnDistance < 0 || 
+                isNaN(pay) || pay < 0 || 
+                isNaN(numDeliveries) || numDeliveries < 0) {
+                document.getElementById('result').innerText = 'Please enter valid positive numbers for all fields.';
                 return;
             }
 
+            const fuelCostPerGallon = parseFloat(document.getElementById('fuelCostPerGallon').value);
+            const mileage = parseFloat(document.getElementById('mileage').value);
+            const loadingTime = parseFloat(document.getElementById('loadingTime').value);
+            const unloadingTime = parseFloat(document.getElementById('unloadingTime').value);
+            const averageSpeed = parseFloat(document.getElementById('averageSpeed').value);
+
+            saveAdvancedSettings();
+
             const totalDistance = distance + returnDistance;
             const fuelCost = (totalDistance / mileage) * fuelCostPerGallon;
-            const profit = pay - fuelCost;
+            const profit = pay - fuelCost - coffeeSnack - gasBought;
 
             const drivingTime = (totalDistance / averageSpeed) * 60; // Convert hours to minutes
             const totalUnloadTime = unloadingTime * numDeliveries;
-            const totalTime = drivingTime + loadingTime + totalUnloadTime;
+            const totalTime = drivingTime + loadingTime + totalUnloadTime + shoppingTime;
 
-            if (profit > 10) {
-                document.getElementById('result').innerText = `Profit: $${profit.toFixed(2)}. This delivery is worth accepting!\nTotal Time: ${totalTime.toFixed(2)} minutes.`;
+            let dollarsPerHour = (profit / totalTime) * 60; // Convert to hourly rate
+            if (dollarsPerHour < 0) dollarsPerHour = 0;
+
+            const formatter = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            });
+
+            document.getElementById('result').innerText = 
+                `Profit: ${formatter.format(profit.toFixed(2))}. ` +
+                `Total Time: ${totalTime.toFixed(2)} minutes. ` +
+                `Dollar per Hour: ${formatter.format(dollarsPerHour.toFixed(2))}/hour.`;
+
+            updateProgressBar(distance, returnDistance, pay, numDeliveries);
+
+            return { profit, totalTime, dollarsPerHour };
+        }
+
+        function saveJob() {
+            const jobData = calculateProfit();
+            if (!jobData) return;
+
+            jobs.push(jobData);
+            localStorage.setItem('jobs', JSON.stringify(jobs));
+            updateJobList();
+            calculateOverallProfit();
+            clearAll();
+        }
+
+        function updateJobList() {
+            const jobListElement = document.getElementById('jobList');
+            jobListElement.innerHTML = jobs.map((job, index) => `Job ${index + 1}: Profit: $${job.profit.toFixed(2)}, Time: ${job.totalTime.toFixed(2)} minutes, Dollar per Hour: $${job.dollarsPerHour.toFixed(2)}/hour.`).join('<br>');
+        }
+
+        function calculateOverallProfit() {
+            const totalProfit = jobs.reduce((acc, job) => acc + job.profit, 0);
+            const formatter = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            });
+
+            document.getElementById('overallProfitResult').innerText = `Total Profit from All Jobs: ${formatter.format(totalProfit.toFixed(2))}`;
+        }
+
+        function updateProgressBar(distance, returnDistance, pay, numDeliveries) {
+            const filledInputs = [distance, returnDistance, pay, numDeliveries].filter(Boolean).length;
+            const progressPercent = (filledInputs / 4) * 100;
+            document.getElementById('progress').style.width = progressPercent + '%';
+        }
+
+        function clearAll() {
+            document.getElementById('distance').value = '';
+            document.getElementById('returnDistance').value = '';
+            document.getElementById('pay').value = '';
+            document.getElementById('numDeliveries').value = '';
+            document.getElementById('shoppingRequired').checked = false;
+            document.getElementById('shoppingTime').value = '';
+            document.getElementById('shoppingTime').disabled = true;
+            document.getElementById('coffeeSnack').value = '';
+            document.getElementById('gasBought').value = '';
+            document.getElementById('result').innerText = '';
+            document.getElementById('progress').style.width = '0%';
+        }
+
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            if (darkMode) {
+                document.documentElement.style.setProperty('--bg-color', '#333');
+                document.documentElement.style.setProperty('--text-color', '#fff');
+                document.documentElement.style.setProperty('--input-bg-color', '#444');
+                document.documentElement.style.setProperty('--result-bg-color', '#555');
+                document.documentElement.style.setProperty('--tooltip-bg-color', '#222');
+                document.documentElement.style.setProperty('--tooltip-text-color', '#ddd');
+                document.documentElement.style.setProperty('--tab-bg-color', '#555');
+                document.documentElement.style.setProperty('--tab-active-bg-color', '#777');
             } else {
-                document.getElementById('result').innerText = `Profit: $${profit.toFixed(2)}. This delivery is not worth accepting.\nTotal Time: ${totalTime.toFixed(2)} minutes.`;
+                document.documentElement.style.setProperty('--bg-color', '#fff');
+                document.documentElement.style.setProperty('--text-color', '#000');
+                document.documentElement.style.setProperty('--input-bg-color', '#fff');
+                document.documentElement.style.setProperty('--result-bg-color', '#f9f9f9');
+                document.documentElement.style.setProperty('--tooltip-bg-color', '#555');
+                document.documentElement.style.setProperty('--tooltip-text-color', '#fff');
+                document.documentElement.style.setProperty('--tab-bg-color', '#f0f0f0');
+                document.documentElement.style.setProperty('--tab-active-bg-color', '#d0eaff');
             }
         }
+
+        window.onload = loadDefaults;
     </script>
 </body>
 </html>
