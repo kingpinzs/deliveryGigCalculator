@@ -1,4 +1,4 @@
-const CACHE_NAME = 'delivery-calculator-cache-v1';
+const CACHE_NAME = 'delivery-calculator-cache-v2';
 const urlsToCache = [
     './',
     './index.html',
